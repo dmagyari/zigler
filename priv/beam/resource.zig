@@ -205,7 +205,7 @@ pub fn MaybeUnwrap(comptime s: builtin.Type.Struct) ?type {
     if (!std.mem.eql(u8, s.fields[1].name, "__should_release")) return null;
 
     switch (@typeInfo(s.fields[0].type)) {
-        .Pointer => |p| {
+        .pointer => |p| {
             if (p.size != .One) return null;
             if (p.is_allowzero) return null;
             return p.child;

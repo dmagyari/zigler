@@ -1647,7 +1647,7 @@ pub fn independent_context(opts: InitEnvOpts) void {
 // tuple is empty.
 pub fn ClearEnvReturn(comptime T: type) type {
     const info = @typeInfo(T);
-    if (info != .Struct) @compileError("unsupported type for ClearEnvReturn, must be a tuple of `beam.term`");
+    if (info != .@"struct") @compileError("unsupported type for ClearEnvReturn, must be a tuple of `beam.term`");
     if (!info.Struct.is_tuple) @compileError("unsupported type for ClearEnvReturn, must be a tuple of `beam.term`");
     const fields = info.Struct.fields;
 
@@ -1705,7 +1705,7 @@ pub fn ClearEnvReturn(comptime T: type) type {
 pub fn clear_env(env_: env, persist: anytype) ClearEnvReturn(@TypeOf(persist)) {
     const T = @TypeOf(persist);
     e.enif_clear_env(env_);
-    if (@typeInfo(T).Struct.fields.len == 1) {
+    if (@typeInfo(T).@"struct".fields.len == 1) {
         return .{ .v = e.enif_make_copy(env_, persist[0].v) };
     } else {
         var result: ClearEnvReturn(T) = undefined;
@@ -1809,9 +1809,9 @@ const WrappedResultTag = enum { ok, error_return_trace };
 
 /// <!-- ignore -->
 pub fn WrappedResult(comptime FunctionType: type) type {
-    const NaiveReturnType = @typeInfo(FunctionType).Fn.return_type.?;
+    const NaiveReturnType = @typeInfo(FunctionType).@"fn".return_type.?;
     return switch (@typeInfo(NaiveReturnType)) {
-        .ErrorUnion => |eu| union(WrappedResultTag) {
+        .error_union => |eu| union(WrappedResultTag) {
             ok: eu.payload,
             error_return_trace: term,
         },
@@ -1858,7 +1858,7 @@ pub fn thread_not_running(err: anytype) bool {
 }
 
 fn has_processterminated(comptime T: type) bool {
-    inline for (@typeInfo(T).ErrorSet.?) |err| {
+    inline for (@typeInfo(T).error_set.?) |err| {
         if (std.mem.eql(u8, err.name, "processterminated")) return true;
     }
     return false;
@@ -1896,7 +1896,7 @@ fn has_processterminated(comptime T: type) bool {
 /// > Unlike code in elixir, the validity of the exception struct is not
 /// > checked when using this function.
 pub fn raise_elixir_exception(comptime module: []const u8, data: anytype, opts: anytype) term {
-    if (@typeInfo(@TypeOf(data)) != .Struct) {
+    if (@typeInfo(@TypeOf(data)) != .@"struct") {
         @compileError("elixir exceptions must be structs");
     }
 
